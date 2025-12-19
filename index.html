@@ -280,7 +280,7 @@
             color: white;
         }
         
-        /* Third Section: Supported Gift Cards & Payments */
+        /* Third Section: Supported Gift Cards & Payments - OPTIMIZED FOR SMOOTH SCROLLING */
         .giftcards-section {
             background-color: var(--bg-3);
             padding: 60px 0;
@@ -290,29 +290,22 @@
             position: relative;
             width: 100%;
             overflow: hidden;
-            padding: 0 8px;
         }
         
         .giftcards-slider {
             display: flex;
             gap: 16px;
-            padding: 10px 0 30px;
+            padding: 10px 16px 30px;
             overflow-x: auto;
             scrollbar-width: none; /* Firefox */
             -ms-overflow-style: none; /* IE and Edge */
             -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-            scroll-behavior: smooth;
-            scroll-snap-type: x mandatory;
-            scroll-padding: 0 16px;
-            padding-left: 8px;
-            padding-right: 8px;
+            scroll-behavior: auto; /* 禁用平滑滚动，实现即时响应 */
             cursor: grab;
             user-select: none;
-        }
-        
-        /* Active state for dragging */
-        .giftcards-slider:active {
-            cursor: grabbing;
+            touch-action: pan-x; /* 允许水平滚动 */
+            will-change: scroll-position;
+            -webkit-user-drag: none;
         }
         
         /* Hide scrollbar but keep scrollable */
@@ -328,7 +321,7 @@
             overflow: hidden;
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
             transition: transform 0.2s, box-shadow 0.2s;
-            scroll-snap-align: start;
+            touch-action: manipulation; /* 防止双击缩放 */
         }
         
         .giftcard-item:active {
@@ -336,7 +329,7 @@
         }
         
         .giftcard-logo {
-            height: 140px; /* 增加高度以补偿移除按钮 */
+            height: 140px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -402,7 +395,7 @@
         .giftcard-name {
             font-size: 18px;
             font-weight: 600;
-            margin-bottom: 0; /* 移除按钮后不需要下边距 */
+            margin-bottom: 0;
             color: var(--dark);
             line-height: 1.4;
         }
@@ -623,10 +616,6 @@
                 height: 140px;
             }
             
-            .giftcards-slider {
-                scroll-snap-type: x mandatory;
-            }
-            
             .giftcard-logo {
                 height: 130px;
             }
@@ -658,10 +647,6 @@
                 height: 110px;
                 font-size: 40px;
             }
-            
-            .giftcards-slider {
-                scroll-snap-type: x mandatory;
-            }
         }
         
         @media (max-width: 360px) {
@@ -680,10 +665,6 @@
             
             .giftcard-logo {
                 height: 100px;
-            }
-            
-            .giftcards-slider {
-                scroll-snap-type: x mandatory;
             }
         }
         
@@ -1125,86 +1106,66 @@
             }
         });
         
-        // Optimized Gift Card Slider with Smooth Scrolling
+        // Simplified and optimized Gift Card Slider
         const slider = document.getElementById('giftcardsSlider');
-        let isDown = false;
-        let startX;
-        let scrollLeft;
-        let momentumId;
         
-        // Improved touch and mouse event handling for smooth scrolling
+        // 移除所有会导致回弹或自动对齐的代码
+        // 只保留最基本的触摸和鼠标事件
+        
+        // 鼠标事件
+        let isMouseDown = false;
+        let startMouseX = 0;
+        let scrollLeftMouse = 0;
+        
         slider.addEventListener('mousedown', (e) => {
-            isDown = true;
-            slider.classList.add('active');
-            startX = e.pageX - slider.offsetLeft;
-            scrollLeft = slider.scrollLeft;
-            cancelMomentumTracking();
+            isMouseDown = true;
+            slider.style.cursor = 'grabbing';
+            startMouseX = e.pageX - slider.offsetLeft;
+            scrollLeftMouse = slider.scrollLeft;
         });
         
         slider.addEventListener('mouseleave', () => {
-            isDown = false;
-            slider.classList.remove('active');
+            isMouseDown = false;
+            slider.style.cursor = 'grab';
         });
         
         slider.addEventListener('mouseup', () => {
-            isDown = false;
-            slider.classList.remove('active');
-            beginMomentumTracking();
+            isMouseDown = false;
+            slider.style.cursor = 'grab';
         });
         
         slider.addEventListener('mousemove', (e) => {
-            if (!isDown) return;
+            if (!isMouseDown) return;
             e.preventDefault();
             const x = e.pageX - slider.offsetLeft;
-            const walk = (x - startX) * 1.5; // Reduced multiplier for smoother scrolling
-            slider.scrollLeft = scrollLeft - walk;
+            const walk = (x - startMouseX);
+            slider.scrollLeft = scrollLeftMouse - walk;
         });
         
-        // Touch events with improved smoothness
+        // 触摸事件
+        let isTouchDown = false;
+        let startTouchX = 0;
+        let scrollLeftTouch = 0;
+        
         slider.addEventListener('touchstart', (e) => {
-            isDown = true;
-            slider.classList.add('active');
-            startX = e.touches[0].pageX - slider.offsetLeft;
-            scrollLeft = slider.scrollLeft;
-            cancelMomentumTracking();
+            isTouchDown = true;
+            startTouchX = e.touches[0].pageX - slider.offsetLeft;
+            scrollLeftTouch = slider.scrollLeft;
         }, { passive: true });
         
         slider.addEventListener('touchend', () => {
-            isDown = false;
-            slider.classList.remove('active');
-            beginMomentumTracking();
+            isTouchDown = false;
         });
         
         slider.addEventListener('touchmove', (e) => {
-            if (!isDown) return;
+            if (!isTouchDown) return;
             if (!e.touches || e.touches.length === 0) return;
             const x = e.touches[0].pageX - slider.offsetLeft;
-            const walk = (x - startX) * 1.5; // Reduced multiplier for smoother scrolling
-            slider.scrollLeft = scrollLeft - walk;
+            const walk = (x - startTouchX);
+            slider.scrollLeft = scrollLeftTouch - walk;
         }, { passive: true });
         
-        // Momentum tracking for smoother scrolling
-        let velX = 0;
-        let momentumX = 0;
-        
-        const beginMomentumTracking = () => {
-            cancelMomentumTracking();
-            momentumId = requestAnimationFrame(momentumLoop);
-        };
-        
-        const cancelMomentumTracking = () => {
-            cancelAnimationFrame(momentumId);
-        };
-        
-        const momentumLoop = () => {
-            slider.scrollLeft += velX;
-            velX *= 0.95; // Friction factor
-            if (Math.abs(velX) > 0.5) {
-                momentumId = requestAnimationFrame(momentumLoop);
-            }
-        };
-        
-        // Ensure all external links open in new tab
+        // 确保所有外部链接在新标签页打开
         document.querySelectorAll('a[href^="http"]').forEach(link => {
             if (!link.getAttribute('target')) {
                 link.setAttribute('target', '_blank');
@@ -1212,7 +1173,7 @@
             }
         });
         
-        // Smooth scrolling to anchors
+        // 平滑滚动到锚点
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function(e) {
                 e.preventDefault();
